@@ -582,6 +582,7 @@ void MVKCommandEncoder::beginMetalRenderPass(MVKCommandUse cmdUse) {
     _fragmentPushConstants.beginMetalRenderPass();
     _depthStencilState.beginMetalRenderPass();
     _stencilReferenceValueState.beginMetalRenderPass();
+    _lineWidthState.beginMetalRenderPass();
     _occlusionQueryState.beginMetalRenderPass();
 }
 
@@ -708,6 +709,7 @@ void MVKCommandEncoder::finalizeDrawState(MVKGraphicsStage stage) {
     _fragmentPushConstants.encode(stage);
     _depthStencilState.encode(stage);
     _stencilReferenceValueState.encode(stage);
+    _lineWidthState.encode(stage);
     _occlusionQueryState.encode(stage);
 }
 
@@ -801,6 +803,7 @@ void MVKCommandEncoder::endMetalRenderEncoding() {
     _fragmentPushConstants.endMetalRenderPass();
     _depthStencilState.endMetalRenderPass();
     _stencilReferenceValueState.endMetalRenderPass();
+    _lineWidthState.endMetalRenderPass();
     _occlusionQueryState.endMetalRenderPass();
 }
 
@@ -1094,6 +1097,7 @@ MVKCommandEncoder::MVKCommandEncoder(MVKCommandBuffer* cmdBuffer,
         _blendColorState(this),
         _depthStencilState(this),
         _stencilReferenceValueState(this),
+        _lineWidthState(this),
         _graphicsResourcesState(this),
         _computeResourcesState(this),
         _vertexPushConstants(this, VK_SHADER_STAGE_VERTEX_BIT),
