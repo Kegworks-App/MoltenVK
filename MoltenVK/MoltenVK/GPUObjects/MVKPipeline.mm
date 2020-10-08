@@ -301,6 +301,10 @@ void MVKGraphicsPipeline::encode(MVKCommandEncoder* cmdEncoder, uint32_t stage) 
             cmdEncoder->_scissorState.setScissors(_scissors.contents(), 0, false);
             cmdEncoder->_mtlPrimitiveType = _mtlPrimitiveType;
 
+            if (_device->_enabledFeatures.wideLines) {
+                cmdEncoder->_lineWidthState.setLineWidth(_rasterInfo.lineWidth, false);
+            }
+
             [mtlCmdEnc setCullMode: _mtlCullMode];
             [mtlCmdEnc setFrontFacingWinding: _mtlFrontWinding];
             [mtlCmdEnc setTriangleFillMode: _mtlFillMode];
@@ -324,6 +328,8 @@ bool MVKGraphicsPipeline::supportsDynamicState(VkDynamicState state) {
 		if (state == ds) {
 			// Some dynamic states have other restrictions
 			switch (state) {
+				case VK_DYNAMIC_STATE_LINE_WIDTH:
+					return _device->_enabledFeatures.wideLines;
 				case VK_DYNAMIC_STATE_DEPTH_BIAS:
 					return _rasterInfo.depthBiasEnable;
 				default:

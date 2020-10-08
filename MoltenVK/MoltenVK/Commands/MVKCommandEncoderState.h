@@ -338,6 +338,28 @@ protected:
 
 
 #pragma mark -
+#pragma mark MVKLineWidthCommandEncoderState
+
+/** Holds encoder state established by line width commands. */
+class MVKLineWidthCommandEncoderState : public MVKCommandEncoderState {
+
+public:
+
+    /** Sets the line width, either as part of pipeline binding, or dynamically. */
+    void setLineWidth(float lineWidth, bool isDynamic);
+
+    /** Constructs this instance for the specified command encoder. */
+    MVKLineWidthCommandEncoderState(MVKCommandEncoder* cmdEncoder)
+        : MVKCommandEncoderState(cmdEncoder) {}
+
+protected:
+    void encodeImpl(uint32_t stage) override;
+
+    float _lineWidth = 1.0f;
+};
+
+
+#pragma mark -
 #pragma mark MVKResourcesCommandEncoderState
 
 /** Abstract resource state class for supporting encoder resources. */
