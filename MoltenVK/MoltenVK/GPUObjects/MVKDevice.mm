@@ -1975,6 +1975,7 @@ void MVKPhysicalDevice::initFeatures() {
     _features.depthBiasClamp = true;
     _features.fillModeNonSolid = true;
     _features.largePoints = true;
+    _features.wideLines = true;
     _features.alphaToOne = true;
     _features.samplerAnisotropy = true;
     _features.shaderImageGatherExtended = true;
@@ -2122,7 +2123,7 @@ void MVKPhysicalDevice::initFeatures() {
 //    VkBool32    depthBiasClamp;                               // done
 //    VkBool32    fillModeNonSolid;                             // done
 //    VkBool32    depthBounds;
-//    VkBool32    wideLines;
+//    VkBool32    wideLines;                                    // done
 //    VkBool32    largePoints;                                  // done
 //    VkBool32    alphaToOne;                                   // done
 //    VkBool32    multiViewport;                                // done
@@ -2440,8 +2441,8 @@ void MVKPhysicalDevice::initLimits() {
 
     _properties.limits.pointSizeGranularity = 1;
     _properties.limits.lineWidthRange[0] = 1;
-    _properties.limits.lineWidthRange[1] = 1;
-    _properties.limits.lineWidthGranularity = 0;
+    _properties.limits.lineWidthRange[1] = 8;
+    _properties.limits.lineWidthGranularity = 0.125;
 
     _properties.limits.standardSampleLocations = VK_TRUE;
     _properties.limits.strictLines = _properties.vendorID == kIntelVendorId || _properties.vendorID == kNVVendorId;
