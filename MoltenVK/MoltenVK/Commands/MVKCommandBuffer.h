@@ -450,6 +450,9 @@ public:
     /** Tracks the current stencil reference value state of the encoder. */
     MVKStencilReferenceValueCommandEncoderState _stencilReferenceValueState;
 
+    /** Tracks the current line width state of the encoder. */
+    MVKLineWidthCommandEncoderState _lineWidthState;
+
     /** Tracks the current graphics resources state of the encoder. */
     MVKGraphicsResourcesCommandEncoderState _graphicsResourcesState;
 

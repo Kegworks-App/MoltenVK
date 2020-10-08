@@ -319,15 +319,12 @@ VkResult MVKCmdSetLineWidth::setContent(MVKCommandBuffer* cmdBuff,
 										float lineWidth) {
     _lineWidth = lineWidth;
 
-    // Validate
-    if (_lineWidth != 1.0 || cmdBuff->getDevice()->_enabledFeatures.wideLines) {
-        return cmdBuff->reportError(VK_ERROR_FEATURE_NOT_PRESENT, "vkCmdSetLineWidth(): The current device does not support wide lines.");
-    }
-
 	return VK_SUCCESS;
 }
 
-void MVKCmdSetLineWidth::encode(MVKCommandEncoder* cmdEncoder) {}
+void MVKCmdSetLineWidth::encode(MVKCommandEncoder* cmdEncoder) {
+	cmdEncoder->_lineWidthState.setLineWidth(_lineWidth, true);
+}
 
 
 #pragma mark -
