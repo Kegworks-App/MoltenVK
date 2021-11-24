@@ -65,9 +65,6 @@ MoltenVK 1.1.5
 
 Released 2021/08/30
 
-- Changes to how `VkSemaphore` is supported:
-	- Revert to prefer `MTLEvent` for `VkSemaphore`, except on NVIDIA, where emulation on CPU is preferred.
-	- Set default value of the `MVK_ALLOW_METAL_FENCES` environment variable to `0 (false)`,
 - Vulkan timestamp query pools use Metal GPU counters when available.
 - Support resolving attachments with formats that Metal does not natively resolve.
 - Support stencil-only partial attachment clearing.
