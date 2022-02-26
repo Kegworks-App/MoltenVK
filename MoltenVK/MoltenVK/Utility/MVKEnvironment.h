@@ -170,7 +170,7 @@ void mvkSetConfig(const MVKConfiguration& mvkConfig);
 
 /** Support full ImageView swizzles. Disabled by default. */
 #ifndef MVK_CONFIG_FULL_IMAGE_VIEW_SWIZZLE
-#   define MVK_CONFIG_FULL_IMAGE_VIEW_SWIZZLE    0
+#   define MVK_CONFIG_FULL_IMAGE_VIEW_SWIZZLE    1 // XXX Required by DXVK for AMD500/Intel GPUs
 #endif
 
 /** Set the fastMathEnabled Metal Compiler option. Enabled by default. */
@@ -240,7 +240,7 @@ void mvkSetConfig(const MVKConfiguration& mvkConfig);
 #   define MVK_ALLOW_METAL_EVENTS    1
 #endif
 #ifndef MVK_ALLOW_METAL_FENCES
-#   define MVK_ALLOW_METAL_FENCES    0
+#   define MVK_ALLOW_METAL_FENCES    1 // XXX Required by DXVK for Apple/NVidia GPUs (better FPS than CPU Emulation)
 #endif
 
 /** Substitute Metal 2D textures for Vulkan 1D images. Enabled by default. */
@@ -275,7 +275,7 @@ void mvkSetConfig(const MVKConfiguration& mvkConfig);
 
 /** Resume MVKDevice VK_ERROR_DEVICE_LOST errors that do not cause MVKPhysicalDevice errors. Disabled by default. */
 #ifndef MVK_CONFIG_RESUME_LOST_DEVICE
-#   define MVK_CONFIG_RESUME_LOST_DEVICE    0
+#   define MVK_CONFIG_RESUME_LOST_DEVICE    1 // XXX Required by WINE (doesn't handle VK_ERROR_DEVICE_LOST correctly)
 #endif
 
 /** Support Metal argument buffers. Disabled by default. */
