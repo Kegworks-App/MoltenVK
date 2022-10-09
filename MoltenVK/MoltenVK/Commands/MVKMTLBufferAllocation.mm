@@ -53,6 +53,8 @@ MVKMTLBufferAllocation* MVKMTLBufferAllocationPool::acquireAllocationUnlocked() 
     MVKMTLBufferAllocation* ba = acquireObject();
     if (!_mtlBuffers[ba->_poolIndex].allocationCount++) {
         [ba->_mtlBuffer setPurgeableState: MTLPurgeableStateNonVolatile];
+        if (_mtlStorageMode == MTLStorageModeShared)
+            memset(ba->_mtlBuffer.contents, 0, ba->_mtlBuffer.length);
     }
     return ba;
 }
