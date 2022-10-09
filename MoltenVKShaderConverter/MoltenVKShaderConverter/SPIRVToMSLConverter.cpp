@@ -340,6 +340,30 @@ MVK_PUBLIC_SYMBOL bool SPIRVToMSLConverter::convert(SPIRVToMSLConversionConfigur
 		}
 		conversionResult.msl = pMSLCompiler->compile();
 
+        struct Patch
+        {
+            std::string find;
+            std::string replace;
+        };
+
+        Patch workaround_patches[] = {
+                { std::string("t3.sample(s3, r0.xyzx.xyz).xyz"), std::string("r0.xyz") }, // iiiman - Samurai Shodown
+                { std::string("t3.sample(s3, r0.yzwy.xyz).xyz"), std::string("r0.yzw") }, // nastys - Initial UE4 HACK
+                { std::string("t3.sample(s3, r1.xyzx.xyz).xyz"), std::string("r1.xyz") }, // iiiman - Street firghter 5
+                { std::string("t4.sample(s3, r0.xyzx.xyz).xyz"), std::string("r0.xyz") }, // iiiman - Dark and Darker
+                { std::string("t5.sample(s5, r2.xyzx.xyz).xyz"), std::string("r2.xyz") }, // nastys - Kingdom Hearts 3 and Life is Strange 3.
+            };
+
+        for (Patch workaround_patch : workaround_patches)
+        {
+            std::string::size_type pos = 0u;
+            while((pos = conversionResult.msl.find(workaround_patch.find, pos)) != std::string::npos)
+            {
+                conversionResult.msl.replace(pos, workaround_patch.find.length(), workaround_patch.replace);
+                pos += workaround_patch.replace.length();
+            }
+        }
+
         if (shouldLogMSL) { logSource(conversionResult.resultLog, conversionResult.msl, "MSL", "Converted"); }
 
 #ifndef SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS
