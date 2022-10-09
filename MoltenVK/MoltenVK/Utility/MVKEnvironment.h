@@ -181,7 +181,7 @@ void mvkSetConfig(const MVKConfiguration& mvkConfig);
 
 /** Set the fastMathEnabled Metal Compiler option. Set to always use fast math by default. */
 #ifndef MVK_CONFIG_FAST_MATH_ENABLED
-#   define MVK_CONFIG_FAST_MATH_ENABLED    MVK_CONFIG_FAST_MATH_ALWAYS
+#   define MVK_CONFIG_FAST_MATH_ENABLED    MVK_CONFIG_FAST_MATH_NEVER // UE4 HACK
 #endif
 
 /** Set the logging level: */
