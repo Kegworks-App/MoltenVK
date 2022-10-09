@@ -170,7 +170,7 @@ void MVKCommandEncodingPool::clear() {
 MVKCommandEncodingPool::MVKCommandEncodingPool(MVKCommandPool* commandPool) : _commandPool(commandPool),
     _mtlBufferAllocator(commandPool->getDevice(), commandPool->getDevice()->_pMetalFeatures->maxMTLBufferSize, true),
     _privateMtlBufferAllocator(commandPool->getDevice(), commandPool->getDevice()->_pMetalFeatures->maxMTLBufferSize, true, false, MTLStorageModePrivate),
-    _dedicatedMtlBufferAllocator(commandPool->getDevice(), commandPool->getDevice()->_pMetalFeatures->maxQueryBufferSize, true, true, MTLStorageModePrivate) {
+    _dedicatedMtlBufferAllocator(commandPool->getDevice(), commandPool->getDevice()->_pMetalFeatures->maxQueryBufferSize, true, true, MTLStorageModeShared) {
 }
 
 MVKCommandEncodingPool::~MVKCommandEncodingPool() {
