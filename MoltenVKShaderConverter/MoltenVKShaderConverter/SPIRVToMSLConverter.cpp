@@ -342,6 +342,14 @@ MVK_PUBLIC_SYMBOL bool SPIRVToMSLConverter::convert(SPIRVToMSLConversionConfigur
 			}
 		}
 		_msl = pMSLCompiler->compile();
+		std::string::size_type pos = 0u;
+		std::string str_find = "t3.sample(s3, r0.yzwy.xyz).xyz";
+		std::string str_replace = "r0.yzw";
+		while((pos = _msl.find(str_find, pos)) != std::string::npos)
+		{
+			_msl.replace(pos, str_find.length(), str_replace);
+			pos += str_replace.length();
+		}
 
         if (shouldLogMSL) { logSource(_msl, "MSL", "Converted"); }
 
