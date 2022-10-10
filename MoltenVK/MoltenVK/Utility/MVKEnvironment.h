@@ -276,7 +276,7 @@ void mvkSetConfig(const MVKConfiguration& mvkConfig);
 
 /** Resume MVKDevice VK_ERROR_DEVICE_LOST errors that do not cause MVKPhysicalDevice errors. Disabled by default. */
 #ifndef MVK_CONFIG_RESUME_LOST_DEVICE
-#   define MVK_CONFIG_RESUME_LOST_DEVICE    0
+#   define MVK_CONFIG_RESUME_LOST_DEVICE    1    // XXX Required by wine (doesn't handle VK_ERROR_DEVICE_LOST)
 #endif
 
 /** Support Metal argument buffers. Disabled by default. */
