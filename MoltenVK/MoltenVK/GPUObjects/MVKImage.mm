@@ -1317,6 +1317,7 @@ void MVKPresentableSwapchainImage::presentCAMetalDrawable(id<CAMetalDrawable> mt
 #if MVK_OS_SIMULATOR
 		_swapchain->recordPresentTime(presentTimingInfo);
 #else
+#ifdef __MAC_10_15_4
 		if ([mtlDrawable respondsToSelector: @selector(addPresentedHandler:)]) {
 			// Ensure this image is not destroyed while awaiting presentation
 			retain();
@@ -1324,7 +1325,9 @@ void MVKPresentableSwapchainImage::presentCAMetalDrawable(id<CAMetalDrawable> mt
 				_swapchain->recordPresentTime(presentTimingInfo, drawable.presentedTime * 1.0e9);
 				release();
 			}];
-		} else {
+		} else
+#endif
+		{
 			_swapchain->recordPresentTime(presentTimingInfo);
 		}
 #endif

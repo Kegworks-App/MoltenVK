@@ -1716,6 +1716,7 @@ void MVKPhysicalDevice::initFeatures() {
     _features.robustBufferAccess = true;  // XXX Required by Vulkan spec
     _features.fullDrawIndexUint32 = true;
     _features.independentBlend = true;
+    _features.geometryShader = true;  // XXX Required by DXVK for D3D10
     _features.sampleRateShading = true;
     _features.depthBiasClamp = true;
     _features.fillModeNonSolid = true;
@@ -1729,6 +1730,7 @@ void MVKPhysicalDevice::initFeatures() {
     _features.shaderUniformBufferArrayDynamicIndexing = true;
     _features.shaderStorageBufferArrayDynamicIndexing = true;
     _features.shaderClipDistance = true;
+    _features.shaderCullDistance = true;  // XXX Required by DXVK for 10level9
     _features.shaderInt16 = true;
     _features.multiDrawIndirect = true;
     _features.inheritedQueries = true;
@@ -3866,8 +3868,8 @@ uint32_t MVKDevice::expandVisibilityResultMTLBuffer(uint32_t queryCount) {
 
     NSUInteger mtlBuffLen = mvkAlignByteCount(newBuffLen, _pMetalFeatures->mtlBufferAlignment);
     MTLResourceOptions mtlBuffOpts = MTLResourceStorageModeShared | MTLResourceCPUCacheModeDefaultCache;
-    [_globalVisibilityResultMTLBuffer release];
-    _globalVisibilityResultMTLBuffer = [getMTLDevice() newBufferWithLength: mtlBuffLen options: mtlBuffOpts];     // retained
+    if (!_globalVisibilityResultMTLBuffer)
+        _globalVisibilityResultMTLBuffer = [getMTLDevice() newBufferWithLength: maxBuffLen options: mtlBuffOpts];     // retained
 
     return _globalVisibilityQueryCount - queryCount;     // Might be lower than requested if an overflow occurred
 }

@@ -404,6 +404,7 @@ function build_impl() {
 	echo Building external libraries for platform ${XC_PLTFM} and destination ${XC_DEST}
 
 	execute_xcodebuild_command 									\
+		GCC_PREPROCESSOR_DEFINITIONS='NDEBUG $(inherited)'		\
 		-project "${XC_PROJ}"									\
 		-scheme "${XC_SCHEME}"									\
 		-destination "generic/platform=${XC_DEST}"				\
