@@ -111,18 +111,13 @@ VkResult MVKCommandBuffer::begin(const VkCommandBufferBeginInfo* pBeginInfo) {
     return getConfigurationResult();
 }
 
-void MVKCommandBuffer::releaseCommands(MVKCommand* command) {
-    while(command) {
-        MVKCommand* nextCommand = command->_next; // Establish next before returning current to pool.
-        (command->getTypePool(getCommandPool()))->returnObject(command);
-        command = nextCommand;
-    }
-}
-
 void MVKCommandBuffer::releaseRecordedCommands() {
-    releaseCommands(_head);
+    for (auto cmd: _destroyList) cmd->~MVKCommand();
+    _destroyList.clear();
 	_head = nullptr;
 	_tail = nullptr;
+    _commandChunkIndex = 0;
+    _commandChunkOffset = 0;
 }
 
 void MVKCommandBuffer::flushImmediateCmdEncoder() {
@@ -193,10 +188,8 @@ void MVKCommandBuffer::addCommand(MVKCommand* command) {
 
     if(_immediateCmdEncoder) {
         _immediateCmdEncoder->encodeCommands(command);
-        if( !_isReusable ) {
-            releaseCommands(command);
-            return;
-        }
+        
+        if( !_isReusable ) return;
     }
 
     if (_tail) { _tail->_next = command; }
@@ -267,6 +260,7 @@ void MVKCommandBuffer::init(const VkCommandBufferAllocateInfo* pAllocateInfo) {
 }
 
 MVKCommandBuffer::~MVKCommandBuffer() {
+    for (auto p : _commandChunks) delete [] p;
 	reset(0);
 }
 
@@ -296,7 +290,7 @@ void MVKCommandBuffer::recordBindPipeline(MVKCmdBindPipeline* mvkBindPipeline) {
 #pragma mark -
 #pragma mark Multiview render pass command management
 
-void MVKCommandBuffer::recordBeginRenderPass(MVKCmdBeginRenderPassBase* mvkBeginRenderPass) {
+void MVKCommandBuffer::recordBeginRenderPass(MVKCmdBeginRenderPass* mvkBeginRenderPass) {
 	MVKRenderPass* mvkRendPass = mvkBeginRenderPass->getRenderPass();
 	_lastMultiviewSubpass = mvkRendPass->isMultiview() ? mvkRendPass->getSubpass(0) : nullptr;
 }
@@ -731,7 +725,7 @@ void MVKCommandEncoder::clearRenderArea() {
 
 		// Create and execute a temporary clear attachments command.
 		// To be threadsafe...do NOT acquire and return the command from the pool.
-		MVKCmdClearMultiAttachments<1> cmd;
+		MVKCmdClearMultiAttachments cmd;
 		cmd.setContent(_cmdBuffer, clearAttCnt, clearAtts.data(), 1, &clearRect);
 		cmd.encode(this);
 	} else {
@@ -743,11 +737,11 @@ void MVKCommandEncoder::clearRenderArea() {
 			// Create and execute a temporary clear attachments command.
 			// To be threadsafe...do NOT acquire and return the command from the pool.
 			if (clearRects.size() == 1) {
-				MVKCmdClearSingleAttachment<1> cmd;
+				MVKCmdClearSingleAttachment cmd;
 				cmd.setContent(_cmdBuffer, 1, &clearAtt, (uint32_t)clearRects.size(), clearRects.data());
 				cmd.encode(this);
 			} else {
-				MVKCmdClearSingleAttachment<4> cmd;
+				MVKCmdClearSingleAttachment cmd;
 				cmd.setContent(_cmdBuffer, 1, &clearAtt, (uint32_t)clearRects.size(), clearRects.data());
 				cmd.encode(this);
 			}
@@ -1083,6 +1077,9 @@ void MVKCommandEncoder::finishQueries() {
     _pActivatedQueries = nullptr;
 }
 
+void *mvkPushCommandMemory(MVKCommandBuffer *cmdBuffer, size_t size) {
+    return cmdBuffer->pushCommandMemory(size);
+}
 
 #pragma mark Construction
 
@@ -1165,11 +1162,11 @@ NSString* mvkMTLRenderCommandEncoderLabel(MVKCommandUse cmdUse) {
 NSString* mvkMTLBlitCommandEncoderLabel(MVKCommandUse cmdUse) {
     switch (cmdUse) {
         case kMVKCommandUsePipelineBarrier:                 return @"vkCmdPipelineBarrier BlitEncoder";
-        case kMVKCommandUseCopyImage:                       return @"vkCmdCopyImage BlitEncoder";
+        case kMVKCommandUseCopyImage:                       return @"vkCmdCopyImage2 BlitEncoder";
         case kMVKCommandUseResolveCopyImage:                return @"vkCmdResolveImage (copy stage) RenderEncoder";
         case kMVKCommandUseCopyBuffer:                      return @"vkCmdCopyBuffer BlitEncoder";
-        case kMVKCommandUseCopyBufferToImage:               return @"vkCmdCopyBufferToImage BlitEncoder";
-        case kMVKCommandUseCopyImageToBuffer:               return @"vkCmdCopyImageToBuffer BlitEncoder";
+        case kMVKCommandUseCopyBufferToImage:               return @"vkCmdCopyBufferToImage2 BlitEncoder";
+        case kMVKCommandUseCopyImageToBuffer:               return @"vkCmdCopyImageToBuffer2 BlitEncoder";
         case kMVKCommandUseFillBuffer:                      return @"vkCmdFillBuffer BlitEncoder";
         case kMVKCommandUseUpdateBuffer:                    return @"vkCmdUpdateBuffer BlitEncoder";
         case kMVKCommandUseResetQueryPool:                  return @"vkCmdResetQueryPool BlitEncoder";
@@ -1183,8 +1180,8 @@ NSString* mvkMTLComputeCommandEncoderLabel(MVKCommandUse cmdUse) {
     switch (cmdUse) {
         case kMVKCommandUseDispatch:                        return @"vkCmdDispatch ComputeEncoder";
         case kMVKCommandUseCopyBuffer:                      return @"vkCmdCopyBuffer ComputeEncoder";
-        case kMVKCommandUseCopyBufferToImage:               return @"vkCmdCopyBufferToImage ComputeEncoder";
-        case kMVKCommandUseCopyImageToBuffer:               return @"vkCmdCopyImageToBuffer ComputeEncoder";
+        case kMVKCommandUseCopyBufferToImage:               return @"vkCmdCopyBufferToImage2 ComputeEncoder";
+        case kMVKCommandUseCopyImageToBuffer:               return @"vkCmdCopyImageToBuffer2 ComputeEncoder";
         case kMVKCommandUseFillBuffer:                      return @"vkCmdFillBuffer ComputeEncoder";
         case kMVKCommandUseClearColorImage:                 return @"vkCmdClearColorImage ComputeEncoder";
 		case kMVKCommandUseResolveImage:                    return @"Resolve Subpass Attachment ComputeEncoder";
