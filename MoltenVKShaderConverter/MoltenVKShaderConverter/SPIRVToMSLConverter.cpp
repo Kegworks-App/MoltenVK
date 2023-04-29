@@ -22,6 +22,9 @@
 #include "FileSupport.h"
 #include "SPIRVSupport.h"
 #include <fstream>
+#include <cstdlib>
+#include <string>
+#include <iostream>
 
 using namespace mvk;
 using namespace std;
@@ -44,6 +47,31 @@ template<class T>
 bool containsMatching(const vector<T>& vec, const T& val) {
     for (const T& vecVal : vec) { if (vecVal.matches(val)) { return true; } }
     return false;
+}
+
+static std::string getEnvVariable(const std::string& name) {
+    char* value = std::getenv(name.c_str());
+    if (value == nullptr) {
+        return ""; // Environment variable not found
+    } else {
+        return std::string(value);
+    }
+}
+
+static std::string withOverride(const std::string& patch) {
+    std::string variable = "{inputColor}";
+    std::string defaultOverride = "clamp(" + variable + " * float3x3( 0.2126 + 0.7874 * 1.2, 0.7152 - 0.7152 * 1.2, 0.0722 - 0.0722 * 1.2, 0.2126 - 0.2126 * 1.2, 0.7152 + 0.2848 * 1.2, 0.0722 - 0.0722 * 1.2, 0.2126 - 0.2126 * 1.2, 0.7152 - 0.7152 * 1.2, 0.0722 + 0.9278 * 1.2 ) * 2 - float3(0.45, 0.45, 0.45), 0.0, 1.0)";
+    std::string override = getEnvVariable("NAS_TONEMAP_C");
+    if(override == "0") {
+        return patch;
+    }
+    if (override == "") {
+        size_t pos = defaultOverride.find(variable);
+        return defaultOverride.replace(pos, variable.length(), patch); // Environment variable not found
+    } else {
+        size_t pos = override.find(variable);
+        return override.replace(pos, variable.length(), patch);
+    }
 }
 
 MVK_PUBLIC_SYMBOL bool SPIRVToMSLConversionOptions::matches(const SPIRVToMSLConversionOptions& other) const {
@@ -346,21 +374,23 @@ MVK_PUBLIC_SYMBOL bool SPIRVToMSLConverter::convert(SPIRVToMSLConversionConfigur
             std::string replace;
         };
 
-        Patch workaround_patches[] = {
-                { std::string("t3.sample(s3, r0.xyzx.xyz).xyz"), std::string("r0.xyz") }, // iiiman - Samurai Shodown
-                { std::string("t3.sample(s3, r0.yzwy.xyz).xyz"), std::string("r0.yzw") }, // nastys - Initial UE4 HACK
-                { std::string("t3.sample(s3, r1.xyzx.xyz).xyz"), std::string("r1.xyz") }, // iiiman - Street firghter 5
-                { std::string("t4.sample(s3, r0.xyzx.xyz).xyz"), std::string("r0.xyz") }, // iiiman - Dark and Darker
-                { std::string("t5.sample(s5, r2.xyzx.xyz).xyz"), std::string("r2.xyz") }, // nastys - Kingdom Hearts 3 and Life is Strange 3.
+        if (getEnvVariable("NAS_DISABLE_UE4_HACK") != "1") {
+            Patch workaround_patches[] = {
+                { std::string("t3.sample(s3, r0.yzwy.xyz).xyz"), std::string("r0.yzw") },
+                { std::string("t3.sample(s3, r0.xyzx.xyz).xyz"), std::string("r0.xyz") },
+                { std::string("t3.sample(s3, r1.xyzx.xyz).xyz"), std::string("r1.xyz") },
+                { std::string("t5.sample(s5, r2.xyzx.xyz).xyz"), std::string("r2.xyz") },
+                { std::string("t4.sample(s3, r0.xyzx.xyz).xyz"), std::string("r0.xyz") },
             };
 
-        for (Patch workaround_patch : workaround_patches)
-        {
-            std::string::size_type pos = 0u;
-            while((pos = conversionResult.msl.find(workaround_patch.find, pos)) != std::string::npos)
+            for (Patch workaround_patch : workaround_patches)
             {
-                conversionResult.msl.replace(pos, workaround_patch.find.length(), workaround_patch.replace);
-                pos += workaround_patch.replace.length();
+                std::string::size_type pos = 0u;
+                while((pos = conversionResult.msl.find(workaround_patch.find, pos)) != std::string::npos)
+                {
+                    conversionResult.msl.replace(pos, workaround_patch.find.length(), withOverride(workaround_patch.replace));
+                    pos += workaround_patch.replace.length();
+                }
             }
         }
 
